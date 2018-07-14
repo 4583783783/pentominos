@@ -1,6 +1,6 @@
 # JS Pentominos
 
-## Recherche de solution de Pentominos en Javascript 
+## Recherche de solutions de Pentominos en Javascript 
 
 ![Pentominos Screenshot](img/screenshot-1.png)
 
@@ -10,11 +10,11 @@ Nécessite un navigateur internet récent (Firefox ou Chromium) car utilise les 
 
 ### Démo : [pentominos](http://alouali.free.fr/pentominos)
 
-Après avoir essayé un algorithme par force brute et 3 optimisations successives (boutons n° 1 à 4), j'ai dévouvert et implémenté l'algorithme [Dancing Links](http://www-cs-faculty.stanford.edu/~knuth/papers/dancing-color.ps.gz) de [Donald Knuth](http://www-cs-faculty.stanford.edu/~knuth/papers/dancing-color.ps.gz)  
+Après avoir codé un algorithme par force brute et 3 optimisations successives (boutons n° 1 à 4), j'ai dévouvert et implémenté l'algorithme [Dancing Links](http://www-cs-faculty.stanford.edu/~knuth/papers/dancing-color.ps.gz) de [Donald Knuth](https://www-cs-faculty.stanford.edu/~knuth/)  
 
-L'excellente idée de Donald Knuth est que il est très facile et peu couteux de remettre dans une liste doublement chainée un élément supprimé : nous avons justement une recherche qui essaye plein de chemins et revient souvent en arrière.
+L'excellente idée de Donald Knuth est qu'il est très facile et peu couteux de remettre dans une liste doublement chainée un élément supprimé : or nous avons justement une recherche qui essaye plein de chemins et revient souvent en arrière.
 
-Les performances de son algorithme sont très impressionnants, et dépassent largement celles de recherche par force brute !
+Les performances de son algorithme sont très impressionnantes, et dépassent largement celles de recherche par force brute !
 
 La plupart des solutions sont trouvées en quelques secondes ou moins.
 
