@@ -23,6 +23,64 @@ La plupart des solutions sont trouvées en quelques secondes ou moins.
 - index.html : page principale de la démo
 - main.js : script principal de la démo
 
+#### Stockage interne puzzle & pièces
+
+Matrice 2D (`matrix[y][x]`) ou 1D applatie (`matrix[y*w+x]`) : y rows de x cols. 
+
+Chaque cellule contient un n° qui peut être :
+
+- 0 : case vide
+
+- 1 à 31 : case numérotée et affichée telle quelle (problème IREM n° du jour du mois)
+
+- 32 à 126 : n° de pièce ou autre objet (les 12 pentominos ont les numéros 101 à 112), affiché par espace insécable (`&nbsp;`)
+
+- 127 : block bordure extérieur interdit (par exemple pour définir une forme de puzzle non rectangle telle que pour le problème de l'IREM)
+
+#### Stockage pièces "Flatland1D"
+
+On ne stocke plus les pièces sous forme de tableaux de 0 et 1, mais les 5 décalages à l'orgine des 5 carrés de la pièce. On a aussi besoin de stocker la largeur (w) de la pièce, pour éviter de traver le bord droit du puzzle !
+
+Exemples pour la pièce Y (si la largeur du puzzle est 7) :
+
+|     |     |     |     |     |     |     |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|+0   |     |     |     |     |     |     |
+|+7   |+8   |     |     |     |     |     |
+|+14  |     |     |     |     |     |     |
+|+21  |     |     |     |     |     |     |
+
+|     |     |     |     |     |     |     |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|     |+1   |     |     |     |     |     |
+|+7   |+8   | +9  |+10  |+11  |     |     |
+
+#### Stockage combiné "Flatland1D + optimisation"
+
+Codage assez complexe, toutes les formes de toutes les pièces dans un seul tableau 1D (dans l'optique un jour de tout passer en Asm.js). Basé sur l'idée des "chunks" des formats TIFF (Amiga) ou AVI (vidéo), des blocs avec taille et décalage.
+
+`lflatpieces` :
+
+|Position|     |
+| :-: | :- 
+| 0 | Taille des pièces
+| 1 | Nombre de pièces
+| 2 | Position vers la forme n°0 de la pièce n°0 (voir p ci-dessous)
+| 3 | Nombre de formes de la pièce n°0
+| 4 | Id de la pièce n°0
+| 5 | Position vers la forme n°0 de la pièce n°1
+| 6 | Nombre de formes de la pièce n°1
+| 7 | Id de la pièce n°1
+| ... |  
+| p | w : Largeur de la forme n°0 de la pièce n°0
+| p+1 | +n1 : Position (décalage) du carré n°1 de la forme n°0 de la pièce n°0
+| p+2 | +n2 : Position (décalage) du carré n°2 de la forme n°0 de la pièce n°0
+| p+3 | +n3 : Position (décalage) du carré n°3 de la forme n°0 de la pièce n°0
+| p+4 | +n4 : Position (décalage) du carré n°4 de la forme n°0 de la pièce n°0
+| p+5 | +n5 : Position (décalage) du carré n°5 de la forme n°0 de la pièce n°0
+| ... |  
+
+
 #### Algorithmes
 
 Ces algorithme sont chacun codés dans un WebWorker pour permettre de les lancer dans un thread en parallèle, ce qui permet d'utiliser les possibilités multicore des processeur d'aujourd'hui, et de ne pas geler l'interface pendant la recherche des solutions
