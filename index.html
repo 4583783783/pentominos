@@ -1,77 +1,26 @@
-<!doctype html>
-
-<html lang="fr">
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-
-<title>Pentominos</title>
-<meta name="description" content="Pentominos" />
-<meta name="author" content="Ahmed Louali" />
-
-<link rel="icon" type="image/png" href="img/pentominos-logo-64.png" />
-
-<link rel="stylesheet" href="css/main.css" />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Résolution de Pentominos</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <header>
-    <h1><img src="img/pentominos-logo-32.png" alt="Pentominos Icon"/>Pentominos</h1>
+    <h1>Résolution de Pentominos</h1>
+    <p>Essayez de placer tous les pentominos sur un plateau de jeu de 10x6.</p>
   </header>
-
-
-  <article>
-  
-    <p>Cette page cherche les solutions au problème n°93 des <a href="http://math.univ-lyon1.fr/irem/IMG/pdf/Defis_maths.pdf"><img src="img/application-pdf.png" alt="PDF Icon" /> 199 défis (mathématiques) <i>à manipuler !</i></a> de l'IREM de Lyon, avec les pentominos L, V, U, Y, P, N</p>
-    
-    <h2>Algorithmes "force brute" : </h2>
-    <p>
-      <button onclick="startWorker('parallel.js')">(1) Basique Matrice 2D</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_flat.js')">(2) Matrice applatie "Flatland 1D"...</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_flat_asm.js')">(3) Flatland1D + optimisation tableau entiers 16bits à plat</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_flat_asm_2.js')">(4) = (3) + élimination positions impossibles dès le départ</button>
-    </p>
-    
-    <h2>Algorithme Double-Link DLX de Donald Knuth : </h2>
-    <p>
-      <button onclick="startWorker('parallel_dlx.js', 'irem')">Problème IREM</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_dlx.js', '3x20')">3 x 20</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_dlx.js', '4x15')">4 x 15</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_dlx.js', '5x12')">5 x 12</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_dlx.js', '6x10')">6 x 10</button>
-      &nbsp;
-      <button onclick="startWorker('parallel_dlx.js', '8x8')">Carré 8x8 avec carré central 2x2</button>
-    </p>
-    
-    <p><button onclick="stopWorker()">Stop</button></p>
-    
-
-    <div id="main">
+  <main>
+    <section id="game-board"></section>
+    <div class="controls">
+      <button id="solve-btn">Résoudre</button>
+      <button id="reset-btn">Réinitialiser</button>
     </div>
-
-  </article>
-  
-  <p>&nbsp;</p>
-  
+  </main>
   <footer>
-    <br/>&copy; Ahmed LOUALI - 2018-06
+    <p>Projet basé sur la problématique d'Ahmed Louali.</p>
   </footer>
-
-  <script src="lib/jquery-3.3.1.min.js"></script>
-  
-  <script src="lib/utils.js"></script>
-  <script src="lib/matrix.js"></script>
-
   <script src="main.js"></script>
-
 </body>
-
 </html>

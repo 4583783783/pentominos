@@ -1,165 +1,97 @@
-﻿// Pentominos
+// Dimensions du plateau
+const boardWidth = 10;
+const boardHeight = 6;
 
-// Le travail en tâche de fond est déporté en parallèle dans le thread Web Worker "parallel.js"
+// Définition des pentominos (formes de base)
+const pentominos = [
+  [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], // Ligne droite
+  [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2]], // En L
+  [[0, 0], [1, 0], [1, 1], [1, 2], [2, 2]], // En T
+  [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]], // En Z
+  [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2]], // En P
+];
 
-// Author  : Ahmed Louali
-// Created : 2018-06-21
+// Plateau de jeu
+let board = [];
 
-"use strict";
+// Initialisation du plateau
+function createBoard() {
+  board = Array.from({ length: boardHeight }, () =>
+    Array(boardWidth).fill(0)
+  );
 
-/*jshint esversion: 6, browser: true, jquery:true, strict:global */
+  const boardElement = document.getElementById("game-board");
+  boardElement.innerHTML = "";
+  boardElement.style.gridTemplateColumns = `repeat(${boardWidth}, 40px)`;
 
-/*globals matrix */
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// DESSIN HTML DES MATRICES
-//
-//////////////////////////////////////////////////////////////////////////////
-
-// Dessine une table correspondant à la matrice en question
-// <mat> : matrice (array de array), <n> : n° de la solution
-function matrixDraw(mat, n){
-  let h = mat.length;
-  let w = mat[0].length;
-  let s = '<div style="display:inline-block;"><p>Solution ' + n + ' :<p/><table>';
-  for(let y = 0; y < h; y++) {
-    s += '<tr>';
-    
-    for(let x = 0; x < w; x++) {
-      
-      s += '<td style="border-style : ';
-      
-      s += " " + (mat[y][x]<127 && (y === 0   || mat[y][x] !== mat[y-1][ x ]) ? "solid" : "none"); // top
-      s += " " + (mat[y][x]<127 && (x === w-1 || mat[y][x] !== mat[ y ][x+1]) ? "solid" : "none"); // right
-      s += " " + (mat[y][x]<127 && (y === h-1 || mat[y][x] !== mat[y+1][ x ]) ? "solid" : "none"); // bottom
-      s += " " + (mat[y][x]<127 && (x === 0   || mat[y][x] !== mat[ y ][x-1]) ? "solid" : "none"); // left
-      
-      s += ';">' + ((mat[y][x] > 0 && mat[y][x] < 32) ? mat[y][x] : '&nbsp;') + '</td>';
-      
+  for (let y = 0; y < boardHeight; y++) {
+    for (let x = 0; x < boardWidth; x++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      boardElement.appendChild(cell);
     }
-    
-    s += '</tr>';
   }
-  s += '</table></div>';
-  
-  $('#main').append(s);
 }
 
-// Dessine une table correspondant à la matrice Flat 1D en question
-function matrixDrawFlat(mat1D, w, h, n){
-  let mat = [];
-  for(let y = 0; y < h; y++) {
-    let row = [];
-    for(let x = 0; x < w; x++) {
-      row.push(mat1D[y*w+x]);
-    }
-    mat.push(row);
-  }
-  matrixDraw(mat, n);
+// Vérification de placement d'une pièce
+function canPlace(piece, offsetX, offsetY) {
+  return piece.every(([dx, dy]) => {
+    const x = dx + offsetX;
+    const y = dy + offsetY;
+    return (
+      x >= 0 &&
+      x < boardWidth &&
+      y >= 0 &&
+      y < boardHeight &&
+      board[y][x] === 0
+    );
+  });
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// CRÉATION DU THREAD DE RECHERCHE EN PARALLÈLE (WEBWORKER)
-// ENVOI & RÉCEPTION DES MESSAGES
-//
-//////////////////////////////////////////////////////////////////////////////
+// Placement d'une pièce sur le plateau
+function placePiece(piece, offsetX, offsetY) {
+  piece.forEach(([dx, dy]) => {
+    const x = dx + offsetX;
+    const y = dy + offsetY;
+    board[y][x] = 1;
 
-var gWorker; // Thread de recherche de la solution en parallèle
-// Avantage 1 : utilisation des processeurs multi-core !
-// Avantage 2 : ne gèle pas l'interface pendant la recherche !
+    const cell = document.querySelector(
+      `.cell[data-x="${x}"][data-y="${y}"]`
+    );
+    if (cell) cell.classList.add("occupied");
+  });
+}
 
-function startWorker(sParallelScript, sPuzzleType) {
-  let t = Date.now();
-  let n = 0; // N° de la solution à afficher
-  
-  if(Worker) {
-    if(gWorker) {
-      stopWorker();
-    }
-    $('#main').empty();
-    n = 0;
-    gWorker = new Worker(sParallelScript);
-    
-    gWorker.onmessage = function(event) {
-      if (event.data.message === "end") {
-        $('#main').append($('<p>').text('Temps total : ' + (Date.now()-t)/1000. + 's'));
-        stopWorker();
-      } else if (event.data.message === "errornopuzzle") {
-        $('#main').append($('<p>').text('ERREUR : aucun puzzle défini !'));
-      } else if (event.data.matrix) {
-        n++;
-        matrixDraw(event.data.matrix, n);
-      } else if (event.data.flatmatrix) {
-        n++;
-        matrixDrawFlat(event.data.flatmatrix, event.data.w, event.data.h, n);
-      }
-    };
-    
-    // Si <sPuzzleType> est défini, on est dans le cas de l'algorithme DLX (les autres algoritmes ne gèrent qu'un cas !)
-    if(sPuzzleType){
-      switch (sPuzzleType) {
-        
-        case "irem": {
-          let lPuzzles = [];
-          for(let nday=0; nday<31; nday++){
-            let puzzle = matrix(5, 7);
-            puzzle[Math.trunc(nday / 7)][nday % 7] = nday+1;
-            puzzle[4][3] = puzzle[4][4] = puzzle[4][5] = puzzle[4][6] = 127;
-            lPuzzles.push(puzzle);
-          }
-          gWorker.postMessage({lPuzzles:lPuzzles, lFilterPieces:["L", "V", "U", "Y", "P", "N"]});
-          break;
-        }
-          
-        case "3x20": {
-          gWorker.postMessage({lPuzzles:[matrix(3, 20)], sym:"rectangle"});
-          break;
-        }
+// Algorithme de backtracking
+function solvePentominos(index = 0) {
+  if (index === pentominos.length) return true;
 
-        case "4x15": {
-          gWorker.postMessage({lPuzzles:[matrix(4, 15)], sym:"rectangle"});
-          break;
-        }
-          
-        case "5x12": {
-          gWorker.postMessage({lPuzzles:[matrix(5, 12)], sym:"rectangle"});
-          break;
-        }
-          
-        case "6x10": {
-          gWorker.postMessage({lPuzzles:[matrix(6, 10)], sym:"rectangle"});
-          break;
-        }
-
-        case "8x8": {
-          let puzzle = matrix(8, 8);
-          puzzle[3][3] = puzzle[3][4] = puzzle[4][3] = puzzle[4][4] = 127;
-          gWorker.postMessage({lPuzzles:[puzzle], sym:"square"});
-          break;
-        }
-          
-        default:
-          $('#main').append($('<p>').text(`ERREUR : Type de puzzle "${sPuzzleType}" non géré !`));
+  const piece = pentominos[index];
+  for (let y = 0; y < boardHeight; y++) {
+    for (let x = 0; x < boardWidth; x++) {
+      if (canPlace(piece, x, y)) {
+        placePiece(piece, x, y);
+        if (solvePentominos(index + 1)) return true;
+        removePiece(piece, x, y);
       }
     }
-    
-  } else {
-    $('#main').append($('<p>').text('Désolé, votre navigateur ne prend pas encharge les Web Worker. Utilisez une version récente de Firefox ou Chromium'))
   }
+  return false;
 }
 
-function stopWorker() {
-  if(gWorker){
-    gWorker.terminate();
-    gWorker = undefined;
-  }
+// Réinitialisation du plateau
+function resetBoard() {
+  createBoard();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// MAIN - Lorsque le DOM est entièrement défini
-///////////////////////////////////////////////////////////////////////////////
-
-$(function () {
+// Événements
+document.getElementById("solve-btn").addEventListener("click", () => {
+  if (!solvePentominos()) alert("Aucune solution trouvée !");
 });
+
+document.getElementById("reset-btn").addEventListener("click", resetBoard);
+
+// Initialisation
+createBoard();
